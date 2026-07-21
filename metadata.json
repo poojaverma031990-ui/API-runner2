@@ -1,0 +1,6 @@
+{
+  "name": "Personal AI Studio",
+  "description": "A custom playground for Gemini models featuring system instructions and real-time chat.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
