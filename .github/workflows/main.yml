@@ -1,0 +1,60 @@
+name: Build Watermark-Free APK
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Install Project Dependencies
+        run: |
+          npm install
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: Build Web Code
+        run: npm run build
+        env:
+          VITE_GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      - name: Wrap into Android App
+        run: |
+          npx cap init "Virtual OS" "com.pooja.virtualos" --web-dir=dist
+          npx cap add android
+          npx cap sync
+
+      - name: Force Exclude Duplicate Kotlin Modules
+        run: |
+          # Inject rules into top-level build file
+          echo "configurations.all { exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8' }" >> android/build.gradle
+          echo "configurations.all { exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7' }" >> android/build.gradle
+          
+          # Inject rules into app-level build file where Capacitor dependencies live
+          echo "configurations.all { exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8' }" >> android/app/build.gradle
+          echo "configurations.all { exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7' }" >> android/app/build.gradle
+
+      - name: Build Raw Debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Upload Clean APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AI-Pro-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+          
