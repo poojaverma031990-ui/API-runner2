@@ -1,0 +1,6 @@
+{
+  "appId": "com.pooja.aipro",
+  "appName": "Ai pro",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
